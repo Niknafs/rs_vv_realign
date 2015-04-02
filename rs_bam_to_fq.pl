@@ -1,15 +1,14 @@
 #!/usr/bin/perl
 ##*********************************************************************
-##  rs_realignment_pipeline.v1.0.pl*
+##  rs_bam_to_fq.pl*
 ##  author: james robert white, phd. 
 ##  email: james.dna.white@gmail.com
-##  created: 2015-03-26
+##  created: 2015-04-02
 ##*********************************************************************
 ## This script performs processing of bam alignments files including
 #  .sorting 
 #  .converting to fastq and formatting
 #  .splitting for size
-#  .re-alignment of fastq files with ELAND stand alone
 #   
 ##*********************************************************************
 use Data::Dumper;
@@ -20,18 +19,18 @@ use strict;
 use POSIX qw/ceil floor/;
 use List::Util qw/first max maxstr min minstr reduce shuffle sum/; 
 ##*********************************************************************
-use vars qw/$opt_d $opt_o/;
+use vars qw/$opt_d $opt_o $opt_s/;
 getopts("d:o:");
 my $usage =
 ".USAGE.   
-rs_realignment_pipeline.v1.0.pl -d < dir of bam/bai files > -o < output directory >
+rs_bam_to_fq.pl -d < dir of bam/bai files > -o < output directory > -s < split final fastq size >
 
 .DESCRIPTION.
-Realignment pipeline from bam to fastq back to bam
 
 .OPTIONS.
-  -d dir of bam/bai files
-  -o output directory
+  -d   dir of bam/bai files
+  -o   output directory
+  -s   size to split the final fqs into (default 1e6)
 
 .KEYWORDS.
 eland, alignment, realignment, bam, fastq
@@ -42,7 +41,7 @@ die $usage unless defined $opt_d
 
 my $BAM_DIR = $opt_d;
 my $OUT_DIR = $opt_o;
-my $ENTRIES_PER_ALIGNMENT = 100000;
+my $ENTRIES_PER_ALIGNMENT = 1000000;
 my $FASTQ_SPLIT_DEX = $ENTRIES_PER_ALIGNMENT*4;
 
 # STAGE 0 -- setup
