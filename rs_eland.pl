@@ -25,7 +25,7 @@ rs_eland.pl -d < dir of bam_to_fq output files >
 .DESCRIPTION.
 
 .OPTIONS.
-  -d  post bam_to_fq ouput directory of files (subdirectories all start wiht analysis)
+  -d  post bam_to_fq ouput directory of files (subdirectories all start with analysis)
 
 .KEYWORDS.
 eland, alignment, realignment, bam, fastq
@@ -48,7 +48,7 @@ my @FQ_LIST  = split "\n", $FQ_LIST;
 my %FQ_PAIRS = ();
 
 foreach my $fq (@FQ_LIST){
-  next if ($fq =~ /fastq$/);
+  next if ($fq =~ /fastq$/ or $fq =~ /fastq.gz$/);
   my @fq     = split /\//, $fq;
   my $id = $fq[$#fq];
   $id    =~ s/\.R[12]\.fastq/\./g;
@@ -76,4 +76,10 @@ foreach my $id (sort keys %FQ_PAIRS){
  
   print "ELAND FOR $id ...\n"; 
   `ELAND_standalone.pl -if $FQ_PAIRS{$id}{R1} -if $FQ_PAIRS{$id}{R2} --use-bases y100 --use-bases y100 -ref $REF_DIR -it FASTQ -od $FQ_PAIRS{$id}{DIR}/$id\_eland --bam`; 
+
+  # clean up
+  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.gz`;
+  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.xml`;
+  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.oa`;
+  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.txt`;  
 }
