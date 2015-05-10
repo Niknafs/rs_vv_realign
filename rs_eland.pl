@@ -16,29 +16,35 @@ use strict;
 use POSIX qw/ceil floor/;
 use List::Util qw/first max maxstr min minstr reduce shuffle sum/; 
 ##*********************************************************************
-use vars qw/$opt_d $opt_o $opt_s/;
-getopts("d:o:");
+use vars qw/$opt_d $opt_o $opt_r/;
+getopts("d:r:");
 my $usage =
 ".USAGE.   
-rs_eland.pl -d < dir of bam_to_fq output files > 
+rs_eland.pl -d < dir of bam_to_fq output files > -r < path to reference genome fasta >
 
 .DESCRIPTION.
 
 .OPTIONS.
   -d  post bam_to_fq ouput directory of files (subdirectories all start with analysis)
+  -r  path to reference genome fasta file 
+  
 
 .KEYWORDS.
 eland, alignment, realignment, bam, fastq
 \n";
 
-die $usage unless defined $opt_d;
+die $usage unless defined $opt_d
+              and defined $opt_r;
 
-my $FQ_DIR = $opt_d;
-my $REF_DIR = "/dcs01/oncbio/rscharpf/White/jdb/jrwhite";
+my $FQ_DIR  = $opt_d;
+my $REF_DIR = $opt_r;
 
 # STAGE 0 -- setup
 if (! -e $FQ_DIR){
   die "Error $FQ_DIR not found!\n";
+}
+if (! -e $REF_DIR){
+  die "Error $REF_DIR not found!\n";
 }
 
 my %FQ_FILES = ();
