@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 ##*********************************************************************
-##  rs_eland.pl*
+##  rs_novoalign.pl*
 ##  author: james robert white, phd. 
 ##  email: james.dna.white@gmail.com
 ##  created: 2015-04-02
 ##*********************************************************************
 ## This script performs processing of split fastq files including
-#  with ELAND to generate aligned bam files
+#  with NOVOALIGN to generate aligned bam files
 ##*********************************************************************
 use Data::Dumper;
 use Getopt::Std;
@@ -20,17 +20,17 @@ use vars qw/$opt_d $opt_o $opt_r/;
 getopts("d:r:");
 my $usage =
 ".USAGE.   
-rs_eland.pl -d < dir of bam_to_fq output files > -r < path to reference genome fasta >
+rs_novoalign.pl -d < dir of bam_to_fq output files > -r < path to reference genome fasta >
 
 .DESCRIPTION.
 
 .OPTIONS.
   -d  post bam_to_fq ouput directory of files (subdirectories all start with analysis)
-  -r  path to reference genome fasta file 
+  -r  path to reference genome *ndx file
   
 
 .KEYWORDS.
-eland, alignment, realignment, bam, fastq
+novoalign, alignment, realignment, bam, fastq
 \n";
 
 die $usage unless defined $opt_d
@@ -70,22 +70,19 @@ foreach my $fq (@FQ_LIST){
 
 foreach my $id (sort keys %FQ_PAIRS){
    
-  if (-e "$FQ_DIR/status/$id.eland.ck"){
+  if (-e "$FQ_DIR/status/$id.novo.ck"){
     next;
   }else{
-    `echo processing > $FQ_DIR/status/$id.eland.ck`;
+    `echo processing > $FQ_DIR/status/$id.novo.ck`;
   }
 
   if (!defined($FQ_PAIRS{$id}{"R1"}) or !defined($FQ_PAIRS{$id}{"R2"})){
    next;
   }
  
-  print "ELAND FOR $id ...\n"; 
-  `ELAND_standalone.pl -if $FQ_PAIRS{$id}{R1} -if $FQ_PAIRS{$id}{R2} --use-bases y100 --use-bases y100 -ref $REF_DIR -it FASTQ -od $FQ_PAIRS{$id}{DIR}/$id\_eland --bam`; 
+  print "NOVOALIGN FOR $id...\n";
+  `mkdir $FQ_PAIRS{$id}{DIR}/$id\_novo`;
+  `novoalign -d $REF_DIR -f $FQ_PAIRS{$id}{R1} $FQ_PAIRS{$id}{R2} -o SAM | samtools view -bS - > $FQ_PAIRS{$id}{DIR}/$id\_novo/reanalysis.bam`;
 
   # clean up
-  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.gz`;
-  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.xml`;
-  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.oa`;
-  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.txt`;  
 }
