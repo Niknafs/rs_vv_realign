@@ -17,16 +17,17 @@ use POSIX qw/ceil floor/;
 use List::Util qw/first max maxstr min minstr reduce shuffle sum/; 
 ##*********************************************************************
 use vars qw/$opt_d $opt_o $opt_r/;
-getopts("d:r:");
+getopts("d:r:o:");
 my $usage =
 ".USAGE.   
-rs_eland.pl -d < dir of bam_to_fq output files > -r < path to reference genome fasta >
+rs_eland.pl -d < dir of bam_to_fq output files > -r < path to reference genome fasta > -o < output dir >
 
 .DESCRIPTION.
 
 .OPTIONS.
   -d  post bam_to_fq ouput directory of files (subdirectories all start with analysis)
-  -r  path to reference genome fasta file 
+  -r  path to reference genome fasta file
+  -o  output directory for alignment files
   
 
 .KEYWORDS.
@@ -34,10 +35,12 @@ eland, alignment, realignment, bam, fastq
 \n";
 
 die $usage unless defined $opt_d
-              and defined $opt_r;
+              and defined $opt_r 
+              and defined $opt_o;
 
 my $FQ_DIR  = $opt_d;
 my $REF_DIR = $opt_r;
+my $OUT_DIR = $opt_o;
 
 # STAGE 0 -- setup
 if (! -e $FQ_DIR){
@@ -45,6 +48,13 @@ if (! -e $FQ_DIR){
 }
 if (! -e $REF_DIR){
   die "Error $REF_DIR not found!\n";
+}
+
+if (! -e $OUT_DIR){
+  `mkdir $OUT_DIR`;
+}
+if (! -e "$OUT_DIR/status"){
+  `mkdir $OUT_DIR/status`;
 }
 
 my %FQ_FILES = ();
@@ -68,12 +78,11 @@ foreach my $fq (@FQ_LIST){
   } 
 }
 
-foreach my $id (sort keys %FQ_PAIRS){
-   
-  if (-e "$FQ_DIR/status/$id.eland.ck"){
+foreach my $id (sort keys %FQ_PAIRS){ 
+  if (-e "$OUT_DIR/status/$id.eland.ck"){
     next;
   }else{
-    `echo processing > $FQ_DIR/status/$id.eland.ck`;
+    `echo processing > $OUT_DIR/status/$id.eland.ck`;
   }
 
   if (!defined($FQ_PAIRS{$id}{"R1"}) or !defined($FQ_PAIRS{$id}{"R2"})){
@@ -81,11 +90,11 @@ foreach my $id (sort keys %FQ_PAIRS){
   }
  
   print "ELAND FOR $id ...\n"; 
-  `ELAND_standalone.pl -if $FQ_PAIRS{$id}{R1} -if $FQ_PAIRS{$id}{R2} --use-bases y100 --use-bases y100 -ref $REF_DIR -it FASTQ -od $FQ_PAIRS{$id}{DIR}/$id\_eland --bam`; 
+  `ELAND_standalone.pl -if $FQ_PAIRS{$id}{R1} -if $FQ_PAIRS{$id}{R2} --use-bases y100 --use-bases y100 -ref $REF_DIR -it FASTQ -od $OUT_DIR/$id\_eland --bam`; 
 
   # clean up
-  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.gz`;
-  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.xml`;
-  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.oa`;
-  `rm $FQ_PAIRS{$id}{DIR}/$id\_eland/*.txt`;  
+  `rm $OUT_DIR/$id\_eland/*.gz`;
+  `rm $OUT_DIR/$id\_eland/*.xml`;
+  `rm $OUT_DIR/$id\_eland/*.oa`;
+  `rm $OUT_DIR/$id\_eland/*.txt`;  
 }

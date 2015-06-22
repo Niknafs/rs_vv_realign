@@ -50,6 +50,9 @@ my $FASTQ_SPLIT_DEX = $ENTRIES_PER_ALIGNMENT*4;
 # STAGE 0 -- setup
 if (! -e $OUT_DIR){
   `mkdir $OUT_DIR`;
+}
+
+if (! -e "$OUT_DIR/status"){
   `mkdir $OUT_DIR/status`;
 }
 
@@ -70,10 +73,10 @@ foreach my $bam (sort keys %BAM_FILES){
    
   my $ANALYSIS_DIR = "$OUT_DIR/analysis\_$prefix";
 
-  if (-e "$OUT_DIR/status/$prefix.ck"){
+  if (-e "$OUT_DIR/status/$prefix.bam_to_fq.ck"){
     next;
   }else{
-    `echo processing > $OUT_DIR/status/$prefix.ck`;
+    `echo processing > $OUT_DIR/status/$prefix.bam_to_fq.ck`;
     `mkdir $ANALYSIS_DIR`; 
   }
 

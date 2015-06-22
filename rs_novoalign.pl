@@ -82,7 +82,7 @@ foreach my $id (sort keys %FQ_PAIRS){
  
   print "NOVOALIGN FOR $id...\n";
   `mkdir $FQ_PAIRS{$id}{DIR}/$id\_novo`;
-  `novoalign -d $REF_DIR -f $FQ_PAIRS{$id}{R1} $FQ_PAIRS{$id}{R2} -o SAM | samtools view -bS - > $FQ_PAIRS{$id}{DIR}/$id\_novo/reanalysis.bam`;
-
-  # clean up
+  `(time novoalign -d $REF_DIR -F STDFQ -f $FQ_PAIRS{$id}{R1} $FQ_PAIRS{$id}{R2} -r Random -l 90 -e 500 -i PE 165,60 -oSAM | samtools view -bS - > $FQ_PAIRS{$id}{DIR}/$id\_novo/reanalysis.bam) 2>$FQ_PAIRS{$id}{DIR}/$id\_novo/time.txt`;
+ 
+   # clean up
 }
