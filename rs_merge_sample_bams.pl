@@ -80,5 +80,13 @@ foreach my $id (sort keys %SAMPLE_LIST){
 
   # merge those bams
   # my $list = `find $F_DIR/analysis_$id -name "reanalysis.bam" -print`;
-  `samtools merge $OUT_DIR/$id.merged.bam \`find $F_DIR/$id\.* -name "reanalysis.bam" -print\``; 
+  print "Begin merge for $id...\n";
+  `samtools merge $OUT_DIR/$id.merged.bam \`find $F_DIR/$id\.* -name "reanalysis.bam" -print\``;
+  print "Begin sort for $id...\n";
+  `samtools sort $OUT_DIR/$id.merged.bam $OUT_DIR/$id.sorted`;
+  print "Begin index for $id...\n";
+  `samtools index $OUT_DIR/$id.sorted.bam`;
+  `mv $OUT_DIR/$id.sorted.bam.bai $OUT_DIR/$id.sorted.bai`; 
+  print "Removing original merged bam for $id...\n";
+  `rm $OUT_DIR/$id.merged.bam`;
 }
