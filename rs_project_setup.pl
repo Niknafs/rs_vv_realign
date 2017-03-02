@@ -49,3 +49,7 @@ foreach my $a (@aligners){
 }
 }
 
+# chmod permissions for writing to these
+`chmod -R ug+rw $DIR`;
+
+

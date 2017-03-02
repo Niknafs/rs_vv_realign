@@ -94,55 +94,24 @@ if (-e "$OUT_DIR/status/$prefix.bam_to_fq.ck"){
 
 # SORT BAM FILE
 # begin by screening out poor quality sequence
-`samtools sort -m 32G -n $fp_bam $ANALYSIS_DIR/$prefix.sorted`;
+# `samtools sort -m 32G -n $fp_bam $ANALYSIS_DIR/$prefix.sorted`;
 
 # CONVERT TO PAIRED END FASTQ
-`bedtools bamtofastq -i $ANALYSIS_DIR/$prefix.sorted.bam -fq $ANALYSIS_DIR/tmp.R1.fastq -fq2 $ANALYSIS_DIR/tmp.R2.fastq`;
-
-# DO THESE REQUIRE CONVERSION FROM phred64 to phred33?
-my $head100 = `sed -n '0~4p' $ANALYSIS_DIR/tmp.R1.fastq | head -n 250`;
-chomp($head100);
-my $PHRED64 = 0;
-
-if ($head100 =~ /[PQRSTUVWXYZabcdefghi]/){
-  $PHRED64 = 1;
-}
-
-if ($PHRED64 == 0){ # NO NEED FOR QUAL CORRECTION
-  `sed 's/\\// /g;n;n;n;' $ANALYSIS_DIR/tmp.R1.fastq > $ANALYSIS_DIR/$prefix.R1.fastq`;
-  `sed 's/\\// /g;n;n;n;' $ANALYSIS_DIR/tmp.R2.fastq > $ANALYSIS_DIR/$prefix.R2.fastq`;
-}else{  # WE NEED TO CONVERT 64 to 33
-  my @rs = qw/R1 R2/;
-  foreach my $r (@rs){
-    open IN, "$ANALYSIS_DIR/tmp.$r.fastq" or die "Can't open $ANALYSIS_DIR/tmp.$r.fastq!\n";
-    open R, ">$ANALYSIS_DIR/$prefix.$r.fastq" or die "Can't open $ANALYSIS_DIR/$prefix.$r.fastq for writing!\n";
-    my $count = 0;
-    while(<IN>){
-      chomp;
-      if ($count % 4 == 0){
-        $_ =~ s/\// /g;
-      }elsif ($count % 4 == 3){ 
-        $_ =~ tr/\x40-\xff\x00-\x3f/\x21-\xe0\x21/; 
-      }
-      print R "$_\n";
-      $count++;
-    }
-    close R;
-    close IN;  
-  } # end of Rs
-} 
-
+# `bedtools bamtofastq -i $ANALYSIS_DIR/$prefix.sorted.bam -fq $ANALYSIS_DIR/tmp.R1.fastq -fq2 $ANALYSIS_DIR/tmp.R2.fastq`;
+`/users/jrwhite/jlib/samtools-1.3/samtools fastq -1 $ANALYSIS_DIR/tmp.R1.fastq -2 $ANALYSIS_DIR/tmp.R2.fastq $fp_bam`;
+`cat $ANALYSIS_DIR/tmp.R1.fastq | paste - - - - | sort -k1,1 -t " " | tr "\t" "\n" > $ANALYSIS_DIR/$prefix.R1.fastq`;
+`cat $ANALYSIS_DIR/tmp.R2.fastq | paste - - - - | sort -k1,1 -t " " | tr "\t" "\n" > $ANALYSIS_DIR/$prefix.R2.fastq`;
  
 # clean up tmp fastqs aftersplitting
-`rm $ANALYSIS_DIR/tmp.R1.fastq`;
-`rm $ANALYSIS_DIR/tmp.R2.fastq`;
+#`rm $ANALYSIS_DIR/tmp.R1.fastq`;
+#`rm $ANALYSIS_DIR/tmp.R2.fastq`;
 
 # clean up sorted bam file
-`rm $ANALYSIS_DIR/$prefix.sorted.bam`;
+#`rm $ANALYSIS_DIR/$prefix.sorted.bam`;
   
 `split -l $FASTQ_SPLIT_DEX -a 4 -d $ANALYSIS_DIR/$prefix.R1.fastq $ANALYSIS_DIR/$prefix.R1.fastq`;
 `split -l $FASTQ_SPLIT_DEX -a 4 -d $ANALYSIS_DIR/$prefix.R2.fastq $ANALYSIS_DIR/$prefix.R2.fastq`;
   
 # clean up full files fastqs 
-`rm $ANALYSIS_DIR/$prefix.R1.fastq`;
-`rm $ANALYSIS_DIR/$prefix.R2.fastq`;
+#`rm $ANALYSIS_DIR/$prefix.R1.fastq`;
+#`rm $ANALYSIS_DIR/$prefix.R2.fastq`;

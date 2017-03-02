@@ -1,36 +1,14 @@
 #!/usr/bin/perl
 ##*********************************************************************
-##  rs_merge_sample_bams.pl*
+##  rs_merge_sample_exports.pl*
 ##  author: james robert white, phd. 
 ##  email: james.dna.white@gmail.com
-##  created: 2015-04-16
+##  created: 2015-10-15
 ##*********************************************************************
 ## This script performs 
 # - identification and merging of partitioned bam file
 # that are realigned
-# - these final bams are deposited into a different (more permanent)
-# directory
-#
-#*********************************************************************
-#
-# Notes regarding SGE settings:
-#
-#   - Both the merging and sorting operations can use multiple cores (e.g.,
-#     specify 'pe local 16'). The overhead for RAM is fairly small for merging.
-#     Thousands of ELAND bam files from an ELAND realignment can be merged using
-#     less than 5G.
-#
-#   - The sorting can require a very large amount of RAM. By default, the
-#     bamfiles are sorted with a maximum allowed memory of 10G per thread. The
-#     following SGE settings would require a total of approx. 150G RAM:
-#     -pe local 16
-#     -l mem_free=15G
-#     -l h_vmem=16G
-#
-#   - If the sort fails, delete the relevant status/ files and submit the SGE
-#     script with the above settings. This script will recognize that the merged
-#     file has already been created and proceed directly to the sorting.
-#     
+# - merging export files from ELAND runs
 ##*********************************************************************
 use Data::Dumper;
 use Getopt::Std;
@@ -44,7 +22,7 @@ use vars qw/$opt_d $opt_i $opt_o $opt_s/;
 getopts("d:i:o:");
 my $usage =
 ".USAGE.   
-rs_merge_sample_bams.pl -d < dir w/ reanalysis.bam files > -i < file index number to process > -o < final output directory > 
+rs_merge_sample_exports.pl -d < dir w/ reanalysis_NoIndex_L001_R{1/2}_001_export.txt.gz files > -i < file index number to process > -o < final output directory > 
 
 .OPTIONS.
   -d  post alignment ouput directory of files
@@ -71,7 +49,7 @@ if (! -e $OUT_DIR){
   `mkdir $OUT_DIR`;
   `mkdir $OUT_DIR/status`;
   `chmod ug+rw $OUT_DIR`;
-  `chmod ug+rw $OUT_DIR/status`;  
+  `chmod ug+rw $OUT_DIR/status`;
 }
 
 if (! -e "$OUT_DIR/status"){
@@ -110,14 +88,9 @@ if (-e "$OUT_DIR/status/$id.merge.ck"){
   `echo processing > $OUT_DIR/status/$id.merge.ck`;
 }
 
-# merge those bams
-print "Begin merge for $id...\n";
-`samtools merge -@ 15 $OUT_DIR/$id.merged.bam \`find $F_DIR/$id\.* -name "reanalysis.bam" -print\``;
-print "Begin sort for $id...\n";
-`samtools sort -m 10G -@ 15 $OUT_DIR/$id.merged.bam $OUT_DIR/$id.sorted`;
-print "Begin index for $id...\n";
-`samtools index $OUT_DIR/$id.sorted.bam`;
-# `mv $OUT_DIR/$id.sorted.bam.bai $OUT_DIR/$id.sorted.bai`; 
+# merge those export.txt.gz R1/R2 files
+print "Begin export merge for $id R1...\n";
+`cat \`find $F_DIR/$id\.* -name "reanalysis_NoIndex_L001_R1_001_export.txt.gz" -print\` > $OUT_DIR/$id\_R1_001_export.txt.gz`;
+print "Begin export merge for $id R2...\n";
+`cat \`find $F_DIR/$id\.* -name "reanalysis_NoIndex_L001_R2_001_export.txt.gz" -print\` > $OUT_DIR/$id\_R2_001_export.txt.gz`;
 
-# print "Removing original merged bam for $id...\n";
-# `rm $OUT_DIR/$id.merged.bam`;

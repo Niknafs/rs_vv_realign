@@ -49,13 +49,13 @@ print "Specified output directory: $outDir\n";
 # PARAMETERS
 my $LOW_MEM_NPROC        = 8;
 my $HIGH_MEM_NPROC       = 2;
-my $DB_DIR               = "/dcs01/oncbio/rscharpf/White/jdb";
-my $HUMAN_GENOME_REF     = "$DB_DIR/hg18/hg18.fasta";
-my $COSMIC_REF           = "$DB_DIR/b37_cosmic_v54_120711.vcf";
-my $DBSNP_REF            = "$DB_DIR/dbsnp_138.b37.vcf";
+my $DB_DIR               = "/dcl01/scharpf/data/reference/with_alternates/hg19_wUns";
+my $HUMAN_GENOME_REF     = "$DB_DIR/hg19_wfas.fa";
+my $COSMIC_REF           = "b37_cosmic_v54_120711.mod.vcf";
+my $DBSNP_REF            = "dbsnp_138.b37.vcf";
 
-my $PICARD_DIR           = "/home/mmi/jrwhite/jlib/picard-tools-1.84";
-my $MUTECT_DIR           = "/home/mmi/jrwhite/jlib/mutect-1.1.4";
+my $PICARD_DIR           = "/users/jrwhite/jlib/picard-tools-1.84";
+my $MUTECT_DIR           = "/users/jrwhite/jlib/mutect-1.1.4";
 my $JAVA6                = "/usr/lib/jvm/java-1.6.0/bin/java";
 
 `mkdir $outDir`;
@@ -99,12 +99,9 @@ if (! -e "$outDir/tumor.sorted.collapsed_addrg.bam"){
 `java -Xmx24g -XX:ParallelGCThreads=8  -jar $PICARD_DIR/BuildBamIndex.jar I=$outDir/tumor.sorted.collapsed_addrg.bam`;
 `java -Xmx24g -XX:ParallelGCThreads=8  -jar $PICARD_DIR/BuildBamIndex.jar I=$outDir/normal.sorted.collapsed_addrg.bam`;
 
-# Step 2.9
-`java -Xmx24g -jar $MUTECT_DIR/GenomeAnalysisTK.jar -T PrintReads -I $outDir/tumor.sorted.collapsed_addrg.bam -o $outDir/tumor.sorted.collapsed_addrg_qfixed.bam --fix_misencoded_quality_scores -R $HUMAN_GENOME_REF`;
-`java -Xmx24g -jar $MUTECT_DIR/GenomeAnalysisTK.jar -T PrintReads -I $outDir/normal.sorted.collapsed_addrg.bam -o $outDir/normal.sorted.collapsed_addrg_qfixed.bam --fix_misencoded_quality_scores -R $HUMAN_GENOME_REF`;
 }
 
 # Step 2.10
 if (! -e "$outDir/mutect.vcf"){
-`$JAVA6 -Xmx24g -Djava.io.tmpdir=$outDir/tmp -jar $MUTECT_DIR/muTect-1.1.4.jar --analysis_type MuTect --reference_sequence $HUMAN_GENOME_REF --input_file:tumor $outDir/tumor.sorted.collapsed_addrg_qfixed.bam --input_file:normal $outDir/normal.sorted.collapsed_addrg_qfixed.bam --out $outDir/mutect.call_stats.txt --coverage_file $outDir/mutect.coverage.wig.txt --vcf $outDir/mutect.vcf --num_threads 8 --downsample_to_coverage 100000 --initial_tumor_lod 3.0 --tumor_lod 4.0 --fraction_contamination 0 --required_maximum_alt_allele_mapping_quality_score -10 --intervals $INTERVAL_LIST --enable_extended_output`;
+`$JAVA6 -Xmx24g -Djava.io.tmpdir=$outDir/tmp -jar $MUTECT_DIR/muTect-1.1.4.jar --analysis_type MuTect --reference_sequence $HUMAN_GENOME_REF --input_file:tumor $outDir/tumor.sorted.collapsed_addrg.bam --input_file:normal $outDir/normal.sorted.collapsed_addrg.bam --out $outDir/mutect.call_stats.txt --coverage_file $outDir/mutect.coverage.wig.txt --vcf $outDir/mutect.vcf --num_threads 8 --downsample_to_coverage 100000 --initial_tumor_lod 3.0 --tumor_lod 4.0 --fraction_contamination 0 --required_maximum_alt_allele_mapping_quality_score -10 --intervals $INTERVAL_LIST --enable_extended_output`;
 }
