@@ -72,6 +72,7 @@ print OUT
 \#\$ -j y
 \#\$ -l mem_free=4G
 \#\$ -l h_vmem=24G
+\#\$ -l h_fsize=100G
 \#\$ -l h_rt=48\:00\:00
 \#\$ -l rnet
 rsync -av vvpoduser\@10.99.4.253:'$from' $to
